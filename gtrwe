@@ -1,0 +1,83 @@
+using UnityEngine;
+
+public class MinecraftPrototype : MonoBehaviour
+{
+    public GameObject blockPrefab; // Assign your block prefab in the inspector
+    public float playerSpeed = 5.0f;
+    public float mouseSensitivity = 5.0f;
+    public int worldWidth = 10;
+    public int worldDepth = 10;
+
+    private float rotationX = 0.0f;
+
+    void Start()
+    {
+        // Generate a simple flat world
+        GenerateWorld();
+    }
+
+    void Update()
+    {
+        HandleMovement();
+        HandleMouseLook();
+        HandleBlockPlacementAndRemoval();
+    }
+
+    void GenerateWorld()
+    {
+        for (int x = 0; x < worldWidth; x++)
+        {
+            for (int z = 0; z < worldDepth; z++)
+            {
+                Instantiate(blockPrefab, new Vector3(x, 0, z), Quaternion.identity);
+            }
+        }
+    }
+
+    void HandleMovement()
+    {
+        float moveHorizontal = Input.GetAxis("Horizontal");
+        float moveVertical = Input.GetAxis("Vertical");
+        Vector3 movement = new Vector3(moveHorizontal, 0.0f, moveVertical);
+        transform.Translate(movement * playerSpeed * Time.deltaTime);
+    }
+
+    void HandleMouseLook()
+    {
+        float mouseX = Input.GetAxis("Mouse X") * mouseSensitivity;
+        float mouseY = Input.GetAxis("Mouse Y") * mouseSensitivity;
+
+        rotationX -= mouseY;
+        rotationX = Mathf.Clamp(rotationX, -90f, 90f);
+
+        Camera.main.transform.localRotation = Quaternion.Euler(rotationX, 0, 0);
+        transform.Rotate(Vector3.up * mouseX);
+    }
+
+    void HandleBlockPlacementAndRemoval()
+    {
+        if (Input.GetMouseButtonDown(0)) // Left-click to place
+        {
+            PlaceBlock();
+        }
+        else if (Input.GetMouseButtonDown(1)) // Right-click to remove
+        {
+            RemoveBlock();
+        }
+    }
+
+    void PlaceBlock()
+    {
+        Vector3 position = Camera.main.transform.position + Camera.main.transform.forward;
+        Instantiate(blockPrefab, position, Quaternion.identity);
+    }
+
+    void RemoveBlock()
+    {
+        RaycastHit hit;
+        if (Physics.Raycast(Camera.main.transform.position, Camera.main.transform.forward, out hit))
+        {
+            Destroy(hit.collider.gameObject);
+        }
+    }
+}
